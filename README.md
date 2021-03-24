@@ -10,3 +10,6 @@ Steps performed in the project:
   II. The top 10 users by post score
   III. The number of distinct users, who used the word “Hadoop” in one of their posts
 4. Using Mapreduce calculate the per user TF IDF and find 10 most used words, excluding stop words.
+
+
+Refer to "Documentation" for step by step guide.
