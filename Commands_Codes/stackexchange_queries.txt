@@ -1,0 +1,12 @@
+Query 1:
+select top 50000 * from Posts order by ViewCount desc;
+
+Query 2: Selecting the last  Viewcount value from the result of the 1st query, and excluding their ID’s to exclude them this time.
+select top 50000 * from Posts where ViewCount<=96538 and Id not in (16346914,2825994);
+
+Query 3: Selecting the last  Viewcount value from the result of the 2nd query, and excluding their ID’s to exclude them this time.
+select top 50000 * from Posts where ViewCount<=56799 and Id not in (7174077,24096657);
+
+Query 4: Selecting the last  Viewcount value from the result of the 3rd query, and excluding their ID’s to exclude them this time.
+select top 50000 * from Posts where ViewCount<=40672 and Id not in (455554);
+

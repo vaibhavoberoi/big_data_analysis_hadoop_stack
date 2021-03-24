@@ -1,0 +1,28 @@
+Q.2. Using Pig or MapReduce, extract, transform and load the data as applicable
+
+data1 =  LOAD '/Vaibhav/QueryResults_1.csv' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE','NOCHANGE','SKIP_INPUT_HEADER') AS (Id:int, PostTypeId:int,  AcceptedAnswerId:int, ParentId:int, CreationDate:chararray, DeletionDate:chararray, Score:int, ViewCount:int, Body:chararray, OwnerUserId:int, OwnerDisplayName:chararray, LastEditorUserId:int, LastEditorDisplayName:chararray, LastEditDate:chararray, LastActivityDate:chararray, Title:chararray, Tags:chararray, AnswerCount:int, CommentCount:int, FavoriteCount:int, ClosedDate:chararray, CommunityOwnedDate:chararray);
+data2 =  LOAD '/Vaibhav/QueryResults_2.csv' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE','NOCHANGE','SKIP_INPUT_HEADER') AS (Id:int, PostTypeId:int,  AcceptedAnswerId:int, ParentId:int, CreationDate:chararray, DeletionDate:chararray, Score:int, ViewCount:int, Body:chararray, OwnerUserId:int, OwnerDisplayName:chararray, LastEditorUserId:int, LastEditorDisplayName:chararray, LastEditDate:chararray, LastActivityDate:chararray, Title:chararray, Tags:chararray, AnswerCount:int, CommentCount:int, FavoriteCount:int, ClosedDate:chararray, CommunityOwnedDate:chararray);
+data3 =  LOAD '/Vaibhav/QueryResults_3.csv' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE','NOCHANGE','SKIP_INPUT_HEADER') AS (Id:int, PostTypeId:int,  AcceptedAnswerId:int, ParentId:int, CreationDate:chararray, DeletionDate:chararray, Score:int, ViewCount:int, Body:chararray, OwnerUserId:int, OwnerDisplayName:chararray, LastEditorUserId:int, LastEditorDisplayName:chararray, LastEditDate:chararray, LastActivityDate:chararray, Title:chararray, Tags:chararray, AnswerCount:int, CommentCount:int, FavoriteCount:int, ClosedDate:chararray, CommunityOwnedDate:chararray);
+data4=  LOAD '/Vaibhav/QueryResults_4.csv' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE','NOCHANGE','SKIP_INPUT_HEADER') AS (Id:int, PostTypeId:int,  AcceptedAnswerId:int, ParentId:int, CreationDate:chararray, DeletionDate:chararray, Score:int, ViewCount:int, Body:chararray, OwnerUserId:int, OwnerDisplayName:chararray, LastEditorUserId:int, LastEditorDisplayName:chararray, LastEditDate:chararray, LastActivityDate:chararray, Title:chararray, Tags:chararray, AnswerCount:int, CommentCount:int, FavoriteCount:int, ClosedDate:chararray, CommunityOwnedDate:chararray);
+ 
+combined_data = UNION data1, data2, data3, data4;
+ 
+Shortlisting columns and removing commas:
+formatted_data = FOREACH combined_data GENERATE  Id AS Id, Score AS Score, REPLACE(Body,',*','') AS Body, OwnerUserId AS OwnerUserId, REPLACE(Title,',*','') AS Title, REPLACE(Tags,',*','') AS Tags;
+
+
+Further formatting:
+Removing \n
+formatted_data2 = FOREACH formatted_data GENERATE Id AS Id, Score AS Score, REPLACE(Body,'\n*','') AS Body, OwnerUserId AS OwnerUserId, REPLACE(Title,'\n*','') AS Title, REPLACE(Tags,'\n*','') AS Tags;
+ 
+Removing html tags like <p>
+formatted_data3 = FOREACH formatted_data2 GENERATE Id AS Id, Score AS Score, REPLACE(Body,'<.*?>',' ') AS Body, OwnerUserId AS OwnerUserId, REPLACE(Title,'<.*?>',' ') AS Title, Tags AS Tags;
+ 
+
+valid_data = FILTER formatted_data3 BY (OwnerUserId IS NOT NULL) AND (Score IS NOT NULL);
+
+STORE valid_data INTO '/output' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',');
+ 
+
+Now exiting pig and checking HDFS 
+hadoop fs -cat /output/part-m-* > Output.csv

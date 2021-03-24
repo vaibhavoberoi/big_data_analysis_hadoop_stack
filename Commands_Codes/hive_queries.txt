@@ -1,0 +1,46 @@
+create table data_posts(Id int, Score int, Body String, OwnerUserId Int, Title String, Tags String)
+row format delimited
+FIELDS TERMINATED BY ','
+location '/new_dir';
+ 
+
+set hive.cli.print.header=true
+
+
+describe posts;
+
+
+select * from posts LIMIT 5;
+
+
+Querying with hive:
+-- first query - 1. The top 10 posts by score
+SELECT id, title, score 
+FROM data_posts
+ORDER BY score DESC LIMIT 10;
+
+ 
+-- second query - 2. The top 10 users by post score
+SELECT OwnerUserId, SUM(Score) AS TotalScore
+FROM data_posts
+GROUP BY OwnerUserId
+ORDER BY TotalScore DESC LIMIT 10;
+
+ 
+-- third query - 3. The number of distinct users, who used the word 'hadoop' in one of their posts
+SELECT COUNT(DISTINCT OwnerUserId)
+FROM data_posts
+WHERE (body LIKE '%hadoop%' OR title LIKE '%hadoop%' OR tags LIKE '%hadoop%');
+
+ 
+INSERT OVERWRITE DIRECTORY '/hiveResults'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+SELECT OwnerUserId, Body, Title
+FROM data_posts
+GROUP BY OwnerUserId, Body, Title;
+ 
+
+
+ 
+

@@ -1,0 +1,68 @@
+create table top_data
+row format delimited
+fields  terminated by ',' as
+select owneruserid, sum(score) as totalscore
+from data_posts group by owneruserid
+order by totalscore desc limit 10;
+
+
+create table data_users as select owneruserid, body, title, tags from data_posts where owneruserid in (select owneruserid from top_data) group by owneruserid, body, title, tags;
+
+saving table in csv file: 
+INSERT OVERWRITE DIRECTORY '/Result_Data'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+SELECT owneruserid, body, title
+FROM data_users
+GROUP BY owneruserid, body, title;
+ 
+
+Now checking the output directory:
+ 
+File is there.
+
+Now, upload jar file and mapper and reducers
+First phase
+
+hadoop jar /home/vaibhavoberoi7/hadoop-streaming-2.7.1.jar -file /home/vaibhavoberoi7/MapperPhaseOne.py /home/vaibhavoberoi7/ReducerPhaseOne.py -mapper "python MapperPhaseOne.py" -reducer "python ReducerPhaseOne.py" -input /Result_Data/000000_0 -output /map_reduce1
+ 
+hadoop fs -cat /map_reduce2/part-* > Result1.csv
+hadoop fs -put /home/vaibhavoberoi7/Result1.csv /map
+_reduce1
+ 
+
+Now running second phase:
+
+hadoop jar /home/vaibhavoberoi7/hadoop-streaming-2.7.1.jar -file /home/vaibhavoberoi7/MapperPhaseTwo.py /home/vaibhavoberoi7/ReducerPhaseTwo.py -mapper "python MapperPhaseTwo.py" -reducer "python ReducerPhaseTwo.py" -input /map_reduce1/Result1.csv -output /map_reduce2
+ 
+hadoop fs -cat /map_reduce2/part-* > Result2.csv
+hadoop fs -put /home/vaibhavoberoi7/Result2.csv /map
+_reduce2
+ 
+
+hadoop jar /home/vaibhavoberoi7/hadoop-streaming-2.7.1.jar -file /home/vaibhavoberoi7/MapperPhaseThree.py /home/vaibhavoberoi7/ReducerPhaseThree.py -mapper "python MapperPhaseThree.py" -reducer "python ReducerPhaseThree.py" -input /map_reduce2/Result2.csv -output /map_reduce3
+
+hadoop fs -cat /map_reduce2/part-* > FinalResult2.csv
+
+
+Uploading this file to a new directory in hdfs:
+Hadoop fs -mkdir \tfidf
+Hadoop fs -put FinalResult2.csv \tfidf
+create table tfidf(Term String, Id int, Tfidf float) 
+row format delimited 
+FIELDS TERMINATED BY ',';
+
+
+create table tfidf_results1(Term String, Id int, TFIDF float)
+row format delimited
+FIELDS TERMINATED BY ','
+location '/tf_idf';
+
+
+select * 
+from (
+select row_number()
+over(partition by id
+order by tfidf desc) as tfidfrank, * from tfidf_results1) n
+where tfidfrank in (1,2,3,4,5,6,7,8,9,10);
+ 
